@@ -1,26 +1,25 @@
 const int NUM_CELDAS = 6;
-// Pines de los botones (Entradas 2 a 7)
+// pines de los botones (Entradas 2 a 7)
 const int BOTONES_PIN[NUM_CELDAS] = {2, 3, 4, 5, 6, 7}; 
-// Pines de los LEDs (Salidas 8 a 13)
+// pines de los LEDs (Salidas 8 a 13)
 const int LEDS_PIN[NUM_CELDAS] = {8, 9, 10, 11, 12, 13}; 
 
-// Variables del Juego
+// variables del juego
 const int MAX_OPORTUNIDADES = 3;
 int oportunidadesRestantes = MAX_OPORTUNIDADES;
-int posicionMina; // La celda correcta (0 a 5)
+int posicionMina; // la celda correcta (0 a 5)
 bool juegoActivo = true;
 
 
-// --- 2. SETUP: CONFIGURACIÓN INICIAL ---
-// -----------------------------------------
+// --- 2. SETUP: CONFIGURACIÓN INICIAL
 
 void setup() {
   Serial.begin(9600);
-  randomSeed(analogRead(A0)); // Mejor semilla aleatoria
+  randomSeed(analogRead(A0)); // mejor semilla aleatoria
 
-  // Configuración de Pines
+  // configuracion de pines
   for (int i = 0; i < NUM_CELDAS; i++) {
-    // Botones como entrada (usando pull-down físico, detecta HIGH al presionar)
+    // botones como entrada
     pinMode(BOTONES_PIN[i], INPUT); 
     // LEDs como salida
     pinMode(LEDS_PIN[i], OUTPUT);
@@ -30,7 +29,7 @@ void setup() {
 }
 
 void iniciarJuego() {
-  // Apagar todos los LEDs al inicio
+  // apagar todos los LEDs al inicio
   for (int i = 0; i < NUM_CELDAS; i++) {
     digitalWrite(LEDS_PIN[i], LOW);
   }
@@ -44,42 +43,40 @@ void iniciarJuego() {
   Serial.print(MAX_OPORTUNIDADES);
   Serial.println(" oportunidades.");
   Serial.println("Presiona un boton (Pines 2 al 7) para intentar.");
-  // Si deseas ver la solución para pruebas, descomenta la siguiente línea:
-  // Serial.print("DEBUG: Mina en posicion (indice 0-5): "); Serial.println(posicionMina); 
 }
 
 
-// --- 3. LOOP: LÓGICA DEL JUEGO ---
-// ----------------------------------
+// LOOP: LÓGICA DEL JUEGO
+
 
 void loop() {
   if (!juegoActivo) {
-    // Si el juego ha terminado, esperamos un momento
+    // si el juego a terminado, esperamos un momento
     delay(500); 
     
-    // Si se perdió, esperamos un botón para reiniciar (reinicio manual)
+    // si se perdio, esperamos un boton para reiniciar (reinicio manual)
     if (oportunidadesRestantes <= 0 && algunBotonPresionado()) {
         iniciarJuego();
     } 
-    // Si se ganó, se reinicia inmediatamente (reinicio automático)
+    // si se gano, se reinicia inmediatamente (reinicio automatico)
     else if (oportunidadesRestantes > 0) {
-        // La función mostrarVictoria ya se encargó de la pausa y la señalización
+       
         iniciarJuego(); 
     }
     
     return;
   }
 
-  // Recorrer los 6 botones (índices 0 a 5)
+
   for (int i = 0; i < NUM_CELDAS; i++) {
-    // Si el botón está presionado (HIGH debido al pull-down)
+  
     if (digitalRead(BOTONES_PIN[i]) == HIGH) {
-      delay(50); // Debounce
-      if (digitalRead(BOTONES_PIN[i]) == HIGH) { // Confirmar la pulsación
+      delay(50); 
+      if (digitalRead(BOTONES_PIN[i]) == HIGH) {
         realizarIntento(i); // i es la celda seleccionada (0, 1, 2, 3, 4, 5)
       }
       
-      // Esperar a que el botón se suelte para evitar múltiples pulsaciones
+    
       while (digitalRead(BOTONES_PIN[i]) == HIGH) {
         delay(10);
       }
@@ -89,12 +86,12 @@ void loop() {
 
 void realizarIntento(int intento) {
   if (intento == posicionMina) {
-    // *** ¡GANASTE! ***
+    // GANASTE
     Serial.println("\n¡FELICIDADES! Encontraste la mina.");
     mostrarVictoria(intento); // Ejecuta la secuencia de LEDs
     juegoActivo = false;
   } else {
-    // *** ¡FALLASTE! ***
+    // FALLASTE
     oportunidadesRestantes--;
     Serial.print("\nFallaste. Te quedan ");
     Serial.print(oportunidadesRestantes);
@@ -102,7 +99,7 @@ void realizarIntento(int intento) {
     mostrarFallo(intento);
 
     if (oportunidadesRestantes <= 0) {
-      // *** ¡PERDISTE! ***
+      // PERDISTE
       Serial.println("\nGAME OVER. Se acabaron tus oportunidades.");
       Serial.print("La mina estaba en el pin: ");
       Serial.println(LEDS_PIN[posicionMina]);
@@ -113,11 +110,10 @@ void realizarIntento(int intento) {
 }
 
 
-// --- 4. FUNCIONES DE VISUALIZACIÓN (FEEDBACK) ---
-// --------------------------------------------------
+// --- 4. visualizacion
 
 void mostrarFallo(int celda) {
-  // Parpadeo del LED fallido
+  // parpadeo del LED fallido
   digitalWrite(LEDS_PIN[celda], HIGH);
   delay(150);
   digitalWrite(LEDS_PIN[celda], LOW);
@@ -128,13 +124,13 @@ void mostrarFallo(int celda) {
 }
 
 void mostrarVictoria(int celdaMina) {
-  // 1. Encender todos los LEDs
+  // encender todos los LEDs
   for(int j = 0; j < NUM_CELDAS; j++){
       digitalWrite(LEDS_PIN[j], HIGH);
   }
-  delay(500); // Se mantienen encendidos medio segundo
+  delay(500);
 
-  // 2. Parpadeo de todos los LEDs
+  // parpadeo de todos los LEDs
   for(int i = 0; i < 4; i++){
     for(int j = 0; j < NUM_CELDAS; j++){
       digitalWrite(LEDS_PIN[j], LOW);
@@ -145,14 +141,14 @@ void mostrarVictoria(int celdaMina) {
     }
     delay(200);
   }
-  // 3. Apagar todos los LEDs para prepararse para el reinicio
+  // apagar todos los LEDs para prepararse para el reinicio
   for(int j = 0; j < NUM_CELDAS; j++){
       digitalWrite(LEDS_PIN[j], LOW);
   }
 }
 
 void mostrarDerrota(int celdaMina) {
-  // Mostrar la posición de la mina (parpadeo rápido)
+  // la posicion de la mina (parpadeo rapido)
   for (int i = 0; i < 8; i++) {
     digitalWrite(LEDS_PIN[celdaMina], HIGH);
     delay(100);
@@ -161,7 +157,7 @@ void mostrarDerrota(int celdaMina) {
   }
 }
 
-// Función auxiliar para reiniciar el juego si se perdió
+// para reiniciar el juego si se perdió
 bool algunBotonPresionado() {
   for (int i = 0; i < NUM_CELDAS; i++) {
     if (digitalRead(BOTONES_PIN[i]) == HIGH) {
